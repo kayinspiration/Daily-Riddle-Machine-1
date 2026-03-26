@@ -1,6 +1,62 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trash2, X } from 'lucide-react';
+import { Trash2, X, Recycle } from 'lucide-react';
+
+const YellowTrashCan = ({ className, isEating }: { className?: string, isEating?: boolean }) => (
+  <motion.div 
+    className={`relative ${className}`}
+    animate={isEating ? {
+      scale: [1, 1.1, 0.9, 1.1, 1],
+      rotate: [0, -5, 5, -3, 0],
+      y: [0, -10, 5, -2, 0]
+    } : { scale: 1, rotate: 0, y: 0 }}
+    transition={isEating ? { duration: 0.5, delay: 0.3 } : { duration: 0.2 }}
+  >
+    <svg viewBox="0 0 100 140" className="w-full h-full drop-shadow-2xl overflow-visible" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Wheels */}
+      <rect x="15" y="100" width="14" height="35" rx="4" fill="#1e1e24" />
+      <rect x="71" y="100" width="14" height="35" rx="4" fill="#1e1e24" />
+      
+      {/* Main Body (Lighter Yellow) */}
+      <path d="M 20 30 L 28 130 C 28 133 30 135 33 135 L 67 135 C 70 135 72 133 72 130 L 80 30 Z" fill="#FFC107" />
+      
+      {/* Shadow (Darker Yellow) */}
+      <path d="M 20 30 L 28 130 C 28 133 30 135 33 135 L 67 135 C 70 135 72 133 72 130 L 76 70 C 70 40 45 30 30 30 Z" fill="#FF9800" />
+      
+      {/* Highlight (Right Edge) */}
+      <path d="M 77 30 L 71 130 C 71 132 70 134 68 135 L 67 135 C 70 135 72 133 72 130 L 80 30 Z" fill="#FFD54F" />
+
+      {/* Bottom Recess */}
+      <path d="M 38 135 L 43 105 C 44 102 56 102 57 105 L 62 135 Z" fill="#F57C00" />
+      <rect x="44" y="125" width="12" height="8" rx="3" fill="#E65100" opacity="0.5" />
+
+      {/* Lid Group */}
+      <motion.g 
+        initial={false}
+        animate={isEating ? { y: -30, rotate: -25, x: -5 } : { y: 0, rotate: 0, x: 0 }}
+        transition={{ type: "spring", stiffness: 200, damping: 12 }}
+        style={{ transformOrigin: '20px 30px' }}
+        className={!isEating ? "transition-transform duration-300 group-hover:-translate-y-3" : ""}
+      >
+        {/* Lid Rim */}
+        <polygon points="18,15 82,15 80,30 20,30" fill="#FFC107" />
+        <polygon points="18,15 82,15 81,20 19,20" fill="#FFD54F" opacity="0.5" />
+        
+        {/* Lid Top */}
+        <rect x="14" y="5" width="72" height="10" rx="2" fill="#FFD54F" />
+        
+        {/* Lid Ribs */}
+        <rect x="35" y="15" width="3" height="10" fill="#FF9800" />
+        <rect x="50" y="15" width="3" height="10" fill="#FF9800" />
+        <rect x="65" y="15" width="3" height="10" fill="#FF9800" />
+      </motion.g>
+    </svg>
+    {/* Recycle Icon */}
+    <div className="absolute inset-0 flex items-center justify-center pt-8 pointer-events-none">
+      <Recycle size={32} color="white" strokeWidth={3} className="drop-shadow-md opacity-90" />
+    </div>
+  </motion.div>
+);
 
 const RIDDLES = [
   {
@@ -185,7 +241,9 @@ export default function App() {
   const [currentType, setCurrentType] = useState<'riddle' | 'answer'>('riddle');
   const [fallenPapers, setFallenPapers] = useState<{id: number, lines: string[], rotate: number, type: 'riddle' | 'answer'}[]>([]);
   const [activeRiddleIndex, setActiveRiddleIndex] = useState<number | null>(null);
+  const [eatCount, setEatCount] = useState(0);
   const trashRef = useRef<HTMLDivElement>(null);
+  const deletedCountRef = useRef(0);
   const paperContainerRef = useRef<HTMLDivElement>(null);
   const [trashOffset, setTrashOffset] = useState({ x: 200, y: 300 });
 
@@ -220,7 +278,54 @@ export default function App() {
       y <= trashRect.bottom + padding
     ) {
       setFallenPapers(prev => prev.filter(p => p.id !== id));
+      setEatCount(c => c + 1);
+      setTimeout(() => setEatCount(c => c - 1), 800);
+      
+      deletedCountRef.current += 1;
+      if (deletedCountRef.current >= 3) {
+        setTimeout(playGulpSound, 300);
+      }
     }
+  };
+
+  const playGulpSound = () => {
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    const playGlug = (startTime: number, baseFreq: number, duration: number) => {
+      const osc = audioCtx.createOscillator();
+      const filter = audioCtx.createBiquadFilter();
+      const gainNode = audioCtx.createGain();
+      
+      // Triangle wave gives a warmer, more organic tone than a pure sine wave
+      osc.type = 'triangle';
+      
+      // Pitch envelope: quick rise (throat opening), then deep fall (swallowing)
+      osc.frequency.setValueAtTime(baseFreq, startTime);
+      osc.frequency.linearRampToValueAtTime(baseFreq * 1.3, startTime + duration * 0.2);
+      osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.4, startTime + duration);
+      
+      // Lowpass filter to muffle the sound, making it feel "internal" and wet
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(baseFreq * 2.5, startTime);
+      filter.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, startTime + duration);
+      filter.Q.value = 4; // Adds a slight resonant "bloop" character
+      
+      // Volume envelope: quick attack, smooth decay
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.8, startTime + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+      
+      osc.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    };
+
+    // Play two distinct "glugs" with slightly different pitches for a cute cartoon gulp
+    playGlug(audioCtx.currentTime, 450, 0.15);
+    playGlug(audioCtx.currentTime + 0.15, 320, 0.2);
   };
 
   const playClickSound = () => {
@@ -638,6 +743,13 @@ export default function App() {
                   onClick={(e) => {
                     e.stopPropagation();
                     setFallenPapers(prev => prev.filter(p => p.id !== paper.id));
+                    setEatCount(c => c + 1);
+                    setTimeout(() => setEatCount(c => c - 1), 800);
+                    
+                    deletedCountRef.current += 1;
+                    if (deletedCountRef.current >= 3) {
+                      setTimeout(playGulpSound, 300);
+                    }
                   }}
                   className="absolute top-2 right-2 p-1.5 text-[#a39b8b] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors z-10 cursor-pointer"
                   title="Delete paper"
@@ -667,10 +779,10 @@ export default function App() {
       {/* Trash Can */}
       <div 
         ref={trashRef}
-        className="fixed bottom-8 right-8 w-16 h-16 bg-[#2a2a2a] rounded-full flex items-center justify-center shadow-[0_8px_16px_rgba(0,0,0,0.6),inset_0_2px_4px_rgba(255,255,255,0.1)] border border-[#444] z-30 text-[#666] transition-colors duration-200"
+        className="fixed bottom-8 right-8 w-20 h-28 z-30 group cursor-pointer transition-transform duration-300 hover:scale-105 active:scale-95"
         title="Drag paper here to trash"
       >
-        <Trash2 size={28} />
+        <YellowTrashCan className="w-full h-full" isEating={eatCount > 0} />
       </div>
     </div>
   );
