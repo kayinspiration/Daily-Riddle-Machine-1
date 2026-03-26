@@ -379,9 +379,11 @@ export default function App() {
 
     const timer = setTimeout(updateTrashOffset, 100);
     window.addEventListener('resize', updateTrashOffset);
+    window.addEventListener('scroll', updateTrashOffset);
     return () => {
       clearTimeout(timer);
       window.removeEventListener('resize', updateTrashOffset);
+      window.removeEventListener('scroll', updateTrashOffset);
     };
   }, []);
 
@@ -605,13 +607,17 @@ export default function App() {
                 exit={{ 
                   x: trashOffset.x,
                   y: trashOffset.y,
-                  scale: 0, 
+                  scale: 0.1, 
                   opacity: 0, 
-                  rotate: paper.rotate + 120,
-                  transition: { duration: 0.4, ease: "easeIn" }
+                  rotate: paper.rotate + 360,
+                  transition: { 
+                    duration: 0.6, 
+                    ease: [0.32, 0.72, 0, 1],
+                    opacity: { duration: 0.4, delay: 0.2 }
+                  }
                 }}
                 transition={{ type: 'spring', damping: 15, stiffness: 50 }}
-                className="absolute bottom-0 left-0 w-full bg-[#fdfbf7] shadow-[0_10px_25px_rgba(0,0,0,0.5)] pb-10 cursor-grab active:cursor-grabbing pointer-events-auto origin-bottom-right border-x border-b border-[#e2dfd8]"
+                className="absolute bottom-0 left-0 w-full bg-[#fdfbf7] shadow-[0_10px_25px_rgba(0,0,0,0.5)] pb-10 cursor-grab active:cursor-grabbing pointer-events-auto origin-center border-x border-b border-[#e2dfd8]"
               >
                 {/* Jagged Top Edge */}
                 <div className="absolute -top-[8px] left-0 w-full h-[8px] flex">
