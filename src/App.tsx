@@ -1,6 +1,31 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trash2, X, Recycle } from 'lucide-react';
+import { Trash2, X, Recycle, Lightbulb, Send, PenTool, Star, Hash, HelpCircle } from 'lucide-react';
+
+const ChalkboardBackground = () => (
+  <div className="fixed inset-0 z-0 overflow-hidden bg-[#1e3329] pointer-events-none">
+    {/* Subtle grid */}
+    <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+    
+    {/* Chalk dust / noise texture */}
+    <div className="absolute inset-0 opacity-30 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPHJlY3Qgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iIzAwMCIgZmlsbC1vcGFjaXR5PSIwLjEiLz4KPC9zdmc+')]"></div>
+
+    {/* Doodles */}
+    <div className="absolute top-[8%] left-[8%] text-white/10 -rotate-12"><Lightbulb size={80} strokeWidth={1.5} /></div>
+    <div className="absolute top-[15%] right-[10%] text-white/10 rotate-12"><HelpCircle size={100} strokeWidth={1.5} /></div>
+    <div className="absolute bottom-[15%] left-[10%] text-white/10 -rotate-45"><Send size={90} strokeWidth={1.5} /></div>
+    <div className="absolute bottom-[25%] right-[12%] text-white/10 rotate-12"><Hash size={120} strokeWidth={1.5} /></div>
+    <div className="absolute top-[45%] left-[4%] text-white/10 rotate-45"><Star size={60} strokeWidth={1.5} /></div>
+    <div className="absolute top-[55%] right-[6%] text-white/10 -rotate-12"><PenTool size={70} strokeWidth={1.5} /></div>
+    
+    {/* Extra small doodles */}
+    <div className="absolute top-[30%] left-[20%] text-white/5 rotate-45"><Star size={30} strokeWidth={2} /></div>
+    <div className="absolute bottom-[40%] right-[25%] text-white/5 -rotate-12"><HelpCircle size={40} strokeWidth={2} /></div>
+
+    {/* Vignette */}
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)]"></div>
+  </div>
+);
 
 const YellowTrashCan = ({ className, isEating }: { className?: string, isEating?: boolean }) => (
   <motion.div 
@@ -528,8 +553,9 @@ export default function App() {
   }, [printingState, currentLines]);
 
   return (
-    <div className="min-h-screen bg-[#111] flex items-center justify-center p-4 font-sans selection:bg-black selection:text-white">
-      <div className="relative w-full max-w-md flex flex-col items-center mt-20">
+    <div className="min-h-screen bg-[#1e3329] flex items-center justify-center p-4 font-sans selection:bg-black selection:text-white relative overflow-hidden">
+      <ChalkboardBackground />
+      <div className="relative z-10 w-full max-w-md flex flex-col items-center mt-20">
         
         {/* Device Front */}
         <div className="relative z-10 w-full bg-[#FFCC00] rounded-2xl p-6 pb-28 shadow-[inset_4px_4px_0px_#FFE666,inset_-4px_-4px_0px_#CC9900,0_20px_40px_rgba(0,0,0,0.6)] flex flex-col gap-6">
