@@ -1,0 +1,5 @@
+{
+  "name": "Fortune Printer",
+  "description": "A 3D-style device that prints daily fortunes on a receipt.",
+  "requestFramePermissions": []
+}
