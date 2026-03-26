@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trash2, X, Recycle, Lightbulb, Send, PenTool, Star, Hash, HelpCircle, School, Tent, Moon, Cloud, Flame, Compass } from 'lucide-react';
+import { Trash2, X, Recycle, Lightbulb, Send, PenTool, Star, Hash, HelpCircle, School, Tent, Moon, Cloud, Flame, Compass, RefreshCw } from 'lucide-react';
 
 const ChalkboardBackground = () => (
   <div className="fixed inset-0 z-0 overflow-hidden bg-[#1e3329] pointer-events-none">
@@ -375,18 +375,231 @@ const RIDDLES = [
   }
 ];
 
+const getPaperTheme = (theme: string) => {
+  switch (theme) {
+    case 'camping':
+      return {
+        bg: 'bg-[#e6d5b8]', // Kraft paper
+        text: 'text-[#4a3b2c]',
+        muted: 'text-[#8b7355]',
+        border: 'border-[#cdae82]',
+        accent: 'text-[#d97706]',
+        accentBg: 'bg-[#d97706]/20',
+        ctaBg: 'bg-[#d4c19c] hover:bg-[#c2ae89]',
+        ctaText: 'text-[#4a3b2c]',
+        quote: 'border-[#cdae82] text-[#8b7355]'
+      };
+    case 'bedtime':
+      return {
+        bg: 'bg-[#1e1b4b]', // Deep indigo
+        text: 'text-indigo-100',
+        muted: 'text-indigo-300',
+        border: 'border-indigo-800',
+        accent: 'text-yellow-200',
+        accentBg: 'bg-yellow-200/20',
+        ctaBg: 'bg-[#2e2a6b] hover:bg-[#3d3882]',
+        ctaText: 'text-indigo-100',
+        quote: 'border-indigo-800 text-indigo-300'
+      };
+    case 'classroom':
+    default:
+      return {
+        bg: 'bg-white',
+        text: 'text-slate-800',
+        muted: 'text-slate-400',
+        border: 'border-slate-200',
+        accent: 'text-blue-500',
+        accentBg: 'bg-blue-50',
+        ctaBg: 'bg-slate-100 hover:bg-slate-200',
+        ctaText: 'text-slate-600',
+        quote: 'border-slate-200 text-slate-300'
+      };
+  }
+};
+
+const PaperReceipt = ({ 
+  paper, 
+  onDragEnd, 
+  onDelete, 
+  trashOffset,
+  theme
+}: { 
+  paper: { id: number, riddleLines: string[], answerLines: string[], rotate: number },
+  onDragEnd: (id: number, info: any) => void,
+  onDelete: (id: number) => void,
+  trashOffset: { x: number, y: number },
+  theme: 'classroom' | 'camping' | 'bedtime'
+}) => {
+  const [isFlipped, setIsFlipped] = useState(false);
+  const styles = getPaperTheme(theme);
+
+  return (
+    <motion.div
+      key={paper.id}
+      drag
+      dragMomentum={true}
+      onDragEnd={(_, info) => onDragEnd(paper.id, info)}
+      initial={{ y: 0, rotate: 0, opacity: 1, scale: 1 }}
+      animate={{ 
+        y: 15 + Math.random() * 10, 
+        rotate: paper.rotate,
+        scale: 1
+      }}
+      exit={{ 
+        x: trashOffset.x,
+        y: trashOffset.y,
+        scale: 0.1, 
+        opacity: 0, 
+        rotate: paper.rotate + 360,
+        transition: { 
+          duration: 0.6, 
+          ease: [0.32, 0.72, 0, 1],
+          opacity: { duration: 0.4, delay: 0.2 }
+        }
+      }}
+      transition={{ type: 'spring', damping: 15, stiffness: 50 }}
+      className="absolute bottom-0 left-0 w-full cursor-grab active:cursor-grabbing pointer-events-auto origin-center"
+      style={{ perspective: 1000 }}
+    >
+      <motion.div
+        animate={{ rotateY: isFlipped ? 180 : 0 }}
+        transition={{ duration: 0.6, type: 'spring', stiffness: 260, damping: 20 }}
+        className="relative w-full"
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        {/* Front Side (Riddle) */}
+        <div 
+          className={`w-full ${styles.bg} shadow-[0_10px_25px_rgba(0,0,0,0.5)] pb-10 border-x border-b ${styles.border}`}
+          style={{ backfaceVisibility: 'hidden' }}
+        >
+          {/* Jagged Top Edge */}
+          <div className="absolute -top-[8px] left-0 w-full h-[8px] flex">
+            {Array.from({ length: 30 }).map((_, i) => (
+              <div key={i} className={`flex-1 h-full ${styles.bg}`} style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} />
+            ))}
+          </div>
+
+          {/* Jagged Bottom Edge */}
+          <div className="absolute -bottom-[8px] left-0 w-full h-[8px] flex">
+            {Array.from({ length: 30 }).map((_, i) => (
+              <div key={i} className={`flex-1 h-full ${styles.bg}`} style={{ clipPath: 'polygon(0% 0%, 100% 0%, 50% 100%)' }} />
+            ))}
+          </div>
+
+          {/* Delete Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(paper.id);
+            }}
+            className={`absolute top-2 right-2 p-1.5 ${styles.muted} hover:text-red-500 hover:bg-red-50 rounded-full transition-colors z-10 cursor-pointer`}
+            title="Delete paper"
+          >
+            <X size={16} />
+          </button>
+
+          <div className={`p-6 pt-8 flex flex-col items-center text-center gap-3 ${styles.text}`}>
+            <div className={`w-8 h-8 rounded-full border ${styles.quote} flex items-center justify-center mb-1`}>
+              <span className={`text-xl font-serif ${styles.muted} leading-none mt-2`}>"</span>
+            </div>
+            <div className="font-serif italic text-base sm:text-lg leading-relaxed px-2">
+              {paper.riddleLines.map((line, index) => (
+                <div key={index}>{line}</div>
+              ))}
+            </div>
+            <div className={`mt-3 pt-3 border-t border-dashed ${styles.border} w-full text-[10px] font-mono ${styles.muted} uppercase tracking-widest`}>
+              Today's Riddle
+            </div>
+            
+            {/* Flip CTA */}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsFlipped(true);
+              }}
+              className={`mt-4 flex items-center gap-2 px-4 py-2 ${styles.ctaBg} ${styles.ctaText} rounded-full text-xs font-bold tracking-wider transition-colors`}
+            >
+              <RefreshCw size={14} />
+              FLIP FOR ANSWER
+            </button>
+          </div>
+        </div>
+
+        {/* Back Side (Answer) */}
+        <div 
+          className={`absolute top-0 left-0 w-full h-full ${styles.bg} shadow-[0_10px_25px_rgba(0,0,0,0.5)] pb-10 border-x border-b ${styles.border}`}
+          style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+        >
+          {/* Jagged Top Edge */}
+          <div className="absolute -top-[8px] left-0 w-full h-[8px] flex">
+            {Array.from({ length: 30 }).map((_, i) => (
+              <div key={i} className={`flex-1 h-full ${styles.bg}`} style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} />
+            ))}
+          </div>
+
+          {/* Jagged Bottom Edge */}
+          <div className="absolute -bottom-[8px] left-0 w-full h-[8px] flex">
+            {Array.from({ length: 30 }).map((_, i) => (
+              <div key={i} className={`flex-1 h-full ${styles.bg}`} style={{ clipPath: 'polygon(0% 0%, 100% 0%, 50% 100%)' }} />
+            ))}
+          </div>
+
+          {/* Delete Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(paper.id);
+            }}
+            className={`absolute top-2 right-2 p-1.5 ${styles.muted} hover:text-red-500 hover:bg-red-50 rounded-full transition-colors z-10 cursor-pointer`}
+            title="Delete paper"
+          >
+            <X size={16} />
+          </button>
+
+          <div className={`p-6 pt-8 flex flex-col items-center text-center gap-3 ${styles.text} h-full justify-center`}>
+            <div className={`w-8 h-8 rounded-full border ${styles.border} flex items-center justify-center mb-1 ${styles.accentBg}`}>
+              <Lightbulb size={16} className={`${styles.accent}`} />
+            </div>
+            <div className={`font-serif italic text-base sm:text-lg leading-relaxed px-2 font-bold ${styles.accent}`}>
+              {paper.answerLines.map((line, index) => (
+                <div key={index}>{line}</div>
+              ))}
+            </div>
+            <div className={`mt-3 pt-3 border-t border-dashed ${styles.border} w-full text-[10px] font-mono ${styles.muted} uppercase tracking-widest`}>
+              The Answer
+            </div>
+            
+            {/* Flip Back CTA */}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsFlipped(false);
+              }}
+              className={`mt-4 flex items-center gap-2 px-4 py-2 ${styles.ctaBg} ${styles.ctaText} rounded-full text-xs font-bold tracking-wider transition-colors`}
+            >
+              <RefreshCw size={14} />
+              FLIP BACK
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 export default function App() {
   const [theme, setTheme] = useState<'classroom' | 'camping' | 'bedtime'>('classroom');
   const [printingState, setPrintingState] = useState<'idle' | 'printing' | 'done' | 'cutting'>('idle');
-  const [currentLines, setCurrentLines] = useState<string[]>([]);
-  const [currentType, setCurrentType] = useState<'riddle' | 'answer'>('riddle');
-  const [fallenPapers, setFallenPapers] = useState<{id: number, lines: string[], rotate: number, type: 'riddle' | 'answer'}[]>([]);
+  const [currentRiddle, setCurrentRiddle] = useState<string[]>([]);
+  const [currentAnswer, setCurrentAnswer] = useState<string[]>([]);
+  const [fallenPapers, setFallenPapers] = useState<{id: number, riddleLines: string[], answerLines: string[], rotate: number}[]>([]);
   const [activeRiddleIndex, setActiveRiddleIndex] = useState<number | null>(null);
   const [eatCount, setEatCount] = useState(0);
   const trashRef = useRef<HTMLDivElement>(null);
   const deletedCountRef = useRef(0);
   const paperContainerRef = useRef<HTMLDivElement>(null);
   const [trashOffset, setTrashOffset] = useState({ x: 200, y: 300 });
+  const styles = getPaperTheme(theme);
 
   const leds = useMemo(() => {
     return Array.from({ length: 3 * 25 }).map((_, i) => {
@@ -580,34 +793,21 @@ export default function App() {
     };
   };
 
-  const handlePrint = (type: 'riddle' | 'answer') => {
+  const handlePrint = () => {
     if (printingState !== 'idle') return;
     
     playClickSound();
     
-    if (type === 'answer' && activeRiddleIndex === null) {
-      setCurrentLines(["Please print a riddle", "first!"]);
-      setCurrentType('answer');
-      setPrintingState('printing');
-      return;
-    }
-
-    if (type === 'riddle') {
-      let newIndex = Math.floor(Math.random() * RIDDLES.length);
-      if (RIDDLES.length > 1) {
-        while (newIndex === activeRiddleIndex) {
-          newIndex = Math.floor(Math.random() * RIDDLES.length);
-        }
+    let newIndex = Math.floor(Math.random() * RIDDLES.length);
+    if (RIDDLES.length > 1) {
+      while (newIndex === activeRiddleIndex) {
+        newIndex = Math.floor(Math.random() * RIDDLES.length);
       }
-      setActiveRiddleIndex(newIndex);
-      setCurrentLines(RIDDLES[newIndex].question);
-      setCurrentType('riddle');
-      setPrintingState('printing');
-    } else if (type === 'answer' && activeRiddleIndex !== null) {
-      setCurrentLines(RIDDLES[activeRiddleIndex].answer);
-      setCurrentType('answer');
-      setPrintingState('printing');
     }
+    setActiveRiddleIndex(newIndex);
+    setCurrentRiddle(RIDDLES[newIndex].question);
+    setCurrentAnswer(RIDDLES[newIndex].answer);
+    setPrintingState('printing');
   };
 
   useEffect(() => {
@@ -636,7 +836,7 @@ export default function App() {
   useEffect(() => {
     if (printingState === 'printing') {
       const stopSound = startPrintingSound();
-      const duration = currentLines.length * 1000;
+      const duration = currentRiddle.length * 1000;
       const timer = setTimeout(() => {
         setPrintingState('done');
       }, duration);
@@ -658,15 +858,15 @@ export default function App() {
       const timer = setTimeout(() => {
         setFallenPapers(prev => [...prev, {
           id: Date.now(),
-          lines: currentLines,
-          rotate: Math.random() * 6 - 3,
-          type: currentType
+          riddleLines: currentRiddle,
+          answerLines: currentAnswer,
+          rotate: Math.random() * 6 - 3
         }]);
         setPrintingState('idle');
       }, 200);
       return () => clearTimeout(timer);
     }
-  }, [printingState, currentLines]);
+  }, [printingState, currentRiddle, currentAnswer]);
 
   const getThemeBgColor = () => {
     switch(theme) {
@@ -715,37 +915,37 @@ export default function App() {
                   scale: 1
                 }}
                 transition={{ 
-                  duration: printingState === 'printing' ? currentLines.length * 1 : 0, 
+                  duration: printingState === 'printing' ? currentRiddle.length * 1 : 0, 
                   ease: "linear" 
                 }}
-                className="absolute bottom-0 left-0 w-full bg-[#fdfbf7] shadow-[0_-5px_15px_rgba(0,0,0,0.2)] pb-10 origin-bottom-right border-x border-b border-[#e2dfd8]"
+                className={`absolute bottom-0 left-0 w-full ${styles.bg} shadow-[0_-5px_15px_rgba(0,0,0,0.2)] pb-10 origin-bottom-right border-x border-b ${styles.border}`}
               >
                 {/* Jagged Top Edge */}
                 <div className="absolute -top-[8px] left-0 w-full h-[8px] flex">
                   {Array.from({ length: 30 }).map((_, i) => (
-                    <div key={i} className="flex-1 h-full bg-[#fdfbf7]" style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} />
+                    <div key={i} className={`flex-1 h-full ${styles.bg}`} style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} />
                   ))}
                 </div>
                 
                 {/* Jagged Bottom Edge */}
                 <div className="absolute -bottom-[8px] left-0 w-full h-[8px] flex">
                   {Array.from({ length: 30 }).map((_, i) => (
-                    <div key={i} className="flex-1 h-full bg-[#fdfbf7]" style={{ clipPath: 'polygon(0% 0%, 100% 0%, 50% 100%)' }} />
+                    <div key={i} className={`flex-1 h-full ${styles.bg}`} style={{ clipPath: 'polygon(0% 0%, 100% 0%, 50% 100%)' }} />
                   ))}
                 </div>
                 
                 {/* Content */}
-                <div className="p-6 pt-8 flex flex-col items-center text-center gap-3 text-[#2c2c2c]">
-                  <div className="w-8 h-8 rounded-full border border-[#d1cabc] flex items-center justify-center mb-1">
-                    <span className="text-xl font-serif text-[#a39b8b] leading-none mt-2">"</span>
+                <div className={`p-6 pt-8 flex flex-col items-center text-center gap-3 ${styles.text}`}>
+                  <div className={`w-8 h-8 rounded-full border ${styles.quote} flex items-center justify-center mb-1`}>
+                    <span className={`text-xl font-serif ${styles.muted} leading-none mt-2`}>"</span>
                   </div>
                   <div className="font-serif italic text-base sm:text-lg leading-relaxed px-2">
-                    {currentLines.map((line, index) => (
+                    {currentRiddle.map((line, index) => (
                       <div key={index}>{line}</div>
                     ))}
                   </div>
-                  <div className="mt-3 pt-3 border-t border-dashed border-[#d1cabc] w-full text-[10px] font-mono text-[#8a8476] uppercase tracking-widest">
-                    {currentType === 'riddle' ? "Today's Riddle" : 'The Answer'}
+                  <div className={`mt-3 pt-3 border-t border-dashed ${styles.border} w-full text-[10px] font-mono ${styles.muted} uppercase tracking-widest`}>
+                    Today's Riddle
                   </div>
                 </div>
               </motion.div>
@@ -806,30 +1006,15 @@ export default function App() {
             {/* Riddle Button */}
             <div className="flex-1 flex flex-col items-center gap-2">
               <button
-                onClick={() => handlePrint('riddle')}
+                onClick={() => handlePrint()}
                 disabled={printingState !== 'idle'}
                 className="relative w-full h-12 bg-[#1a1a1a] rounded-sm flex items-center justify-center transition-all duration-75 disabled:opacity-90 disabled:cursor-not-allowed shadow-[inset_1px_1px_1px_rgba(255,255,255,0.15),_inset_-1px_-1px_1px_rgba(0,0,0,0.8),_0_5px_0_#000,_0_6px_8px_rgba(0,0,0,0.6)] active:shadow-[inset_1px_1px_1px_rgba(255,255,255,0.15),_inset_-1px_-1px_1px_rgba(0,0,0,0.8),_0_0px_0_#000,_0_2px_4px_rgba(0,0,0,0.6)] active:translate-y-[5px]"
               >
-                <div className="w-6 h-1 bg-[#0a0a0a] rounded-full shadow-[1px_1px_0_rgba(255,255,255,0.05)]"></div>
+                <div className="w-12 h-1 bg-[#0a0a0a] rounded-full shadow-[1px_1px_0_rgba(255,255,255,0.05)]"></div>
               </button>
               <div className="flex items-center gap-1.5">
                 <div className="w-0 h-0 border-t-[4px] border-t-transparent border-l-[6px] border-l-[#FFCC00] border-b-[4px] border-b-transparent"></div>
-                <span className="text-[#FFCC00] font-sans font-bold text-[11px] tracking-[0.15em]">RIDDLE</span>
-              </div>
-            </div>
-
-            {/* Answer Button */}
-            <div className="flex-1 flex flex-col items-center gap-2">
-              <button
-                onClick={() => handlePrint('answer')}
-                disabled={printingState !== 'idle'}
-                className="relative w-full h-12 bg-[#1a1a1a] rounded-sm flex items-center justify-center transition-all duration-75 disabled:opacity-90 disabled:cursor-not-allowed shadow-[inset_1px_1px_1px_rgba(255,255,255,0.15),_inset_-1px_-1px_1px_rgba(0,0,0,0.8),_0_5px_0_#000,_0_6px_8px_rgba(0,0,0,0.6)] active:shadow-[inset_1px_1px_1px_rgba(255,255,255,0.15),_inset_-1px_-1px_1px_rgba(0,0,0,0.8),_0_0px_0_#000,_0_2px_4px_rgba(0,0,0,0.6)] active:translate-y-[5px]"
-              >
-                <div className="w-6 h-1 bg-[#0a0a0a] rounded-full shadow-[1px_1px_0_rgba(255,255,255,0.05)]"></div>
-              </button>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 bg-[#FFCC00]"></div>
-                <span className="text-[#FFCC00] font-sans font-bold text-[11px] tracking-[0.15em]">ANSWER</span>
+                <span className="text-[#FFCC00] font-sans font-bold text-[11px] tracking-[0.15em]">PRINT RIDDLE</span>
               </div>
             </div>
 
@@ -865,79 +1050,23 @@ export default function App() {
         <div ref={paperContainerRef} className="absolute left-1/2 -translate-x-1/2 w-[92%] h-[300px] z-20 pointer-events-none" style={{ bottom: 'calc(100% - 36px)' }}>
           <AnimatePresence>
             {fallenPapers.map(paper => (
-              <motion.div
+              <PaperReceipt 
                 key={paper.id}
-                drag
-                dragMomentum={true}
-                onDragEnd={(_, info) => handleDragEnd(paper.id, info)}
-                initial={{ y: 0, rotate: 0, opacity: 1, scale: 1 }}
-                animate={{ 
-                  y: 15 + Math.random() * 10, 
-                  rotate: paper.rotate,
-                  scale: 1
-                }}
-                exit={{ 
-                  x: trashOffset.x,
-                  y: trashOffset.y,
-                  scale: 0.1, 
-                  opacity: 0, 
-                  rotate: paper.rotate + 360,
-                  transition: { 
-                    duration: 0.6, 
-                    ease: [0.32, 0.72, 0, 1],
-                    opacity: { duration: 0.4, delay: 0.2 }
+                paper={paper}
+                trashOffset={trashOffset}
+                theme={theme}
+                onDragEnd={handleDragEnd}
+                onDelete={(id) => {
+                  setFallenPapers(prev => prev.filter(p => p.id !== id));
+                  setEatCount(c => c + 1);
+                  setTimeout(() => setEatCount(c => c - 1), 800);
+                  
+                  deletedCountRef.current += 1;
+                  if (deletedCountRef.current > 0 && deletedCountRef.current % 3 === 0) {
+                    setTimeout(playGulpSound, 300);
                   }
                 }}
-                transition={{ type: 'spring', damping: 15, stiffness: 50 }}
-                className="absolute bottom-0 left-0 w-full bg-[#fdfbf7] shadow-[0_10px_25px_rgba(0,0,0,0.5)] pb-10 cursor-grab active:cursor-grabbing pointer-events-auto origin-center border-x border-b border-[#e2dfd8]"
-              >
-                {/* Jagged Top Edge */}
-                <div className="absolute -top-[8px] left-0 w-full h-[8px] flex">
-                  {Array.from({ length: 30 }).map((_, i) => (
-                    <div key={i} className="flex-1 h-full bg-[#fdfbf7]" style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} />
-                  ))}
-                </div>
-
-                {/* Jagged Bottom Edge */}
-                <div className="absolute -bottom-[8px] left-0 w-full h-[8px] flex">
-                  {Array.from({ length: 30 }).map((_, i) => (
-                    <div key={i} className="flex-1 h-full bg-[#fdfbf7]" style={{ clipPath: 'polygon(0% 0%, 100% 0%, 50% 100%)' }} />
-                  ))}
-                </div>
-
-                {/* Delete Button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setFallenPapers(prev => prev.filter(p => p.id !== paper.id));
-                    setEatCount(c => c + 1);
-                    setTimeout(() => setEatCount(c => c - 1), 800);
-                    
-                    deletedCountRef.current += 1;
-                    if (deletedCountRef.current > 0 && deletedCountRef.current % 3 === 0) {
-                      setTimeout(playGulpSound, 300);
-                    }
-                  }}
-                  className="absolute top-2 right-2 p-1.5 text-[#a39b8b] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors z-10 cursor-pointer"
-                  title="Delete paper"
-                >
-                  <X size={16} />
-                </button>
-
-                <div className="p-6 pt-8 flex flex-col items-center text-center gap-3 text-[#2c2c2c]">
-                  <div className="w-8 h-8 rounded-full border border-[#d1cabc] flex items-center justify-center mb-1">
-                    <span className="text-xl font-serif text-[#a39b8b] leading-none mt-2">"</span>
-                  </div>
-                  <div className="font-serif italic text-base sm:text-lg leading-relaxed px-2">
-                    {paper.lines.map((line, index) => (
-                      <div key={index}>{line}</div>
-                    ))}
-                  </div>
-                  <div className="mt-3 pt-3 border-t border-dashed border-[#d1cabc] w-full text-[10px] font-mono text-[#8a8476] uppercase tracking-widest">
-                    {paper.type === 'riddle' ? "Today's Riddle" : 'The Answer'}
-                  </div>
-                </div>
-              </motion.div>
+              />
             ))}
           </AnimatePresence>
         </div>
