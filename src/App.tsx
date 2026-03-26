@@ -243,6 +243,97 @@ export default function App() {
     oscillator.stop(audioCtx.currentTime + 0.02);
   };
 
+  const playCutSound = () => {
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const duration = 0.2; // Slightly longer for a realistic tear
+    const bufferSize = audioCtx.sampleRate * duration;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    
+    // Generate noise with texture (mix of brownian-ish and white noise)
+    let lastOut = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      data[i] = (lastOut + (0.02 * white)) / 1.02; // Lowpass body
+      lastOut = data[i];
+      data[i] += white * 0.5; // High frequency grit
+    }
+
+    const noiseSource = audioCtx.createBufferSource();
+    noiseSource.buffer = buffer;
+
+    // Filter to shape the paper sound
+    const highpass = audioCtx.createBiquadFilter();
+    highpass.type = 'highpass';
+    highpass.frequency.setValueAtTime(800, audioCtx.currentTime);
+    highpass.frequency.linearRampToValueAtTime(2500, audioCtx.currentTime + duration);
+
+    const lowpass = audioCtx.createBiquadFilter();
+    lowpass.type = 'lowpass';
+    lowpass.frequency.value = 5000;
+
+    // Envelope for the "rip" texture (multiple peaks)
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(1.0, audioCtx.currentTime + 0.02);
+    gainNode.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.06);
+    gainNode.gain.linearRampToValueAtTime(0.9, audioCtx.currentTime + 0.1);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+
+    noiseSource.connect(highpass);
+    highpass.connect(lowpass);
+    lowpass.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    noiseSource.start();
+  };
+
+  const startPrintingSound = () => {
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    // Motor hum
+    const motor = audioCtx.createOscillator();
+    motor.type = 'triangle';
+    motor.frequency.value = 120;
+    
+    // Paper noise
+    const bufferSize = audioCtx.sampleRate * 1;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    noise.loop = true;
+
+    const noiseFilter = audioCtx.createBiquadFilter();
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.value = 3000;
+    noiseFilter.Q.value = 0.5;
+
+    const masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.015; // Very subtle background noise
+
+    motor.connect(masterGain);
+    noise.connect(noiseFilter);
+    noiseFilter.connect(masterGain);
+    masterGain.connect(audioCtx.destination);
+
+    motor.start();
+    noise.start();
+
+    return () => {
+      masterGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+      setTimeout(() => {
+        try {
+          motor.stop();
+          noise.stop();
+        } catch (e) {}
+      }, 200);
+    };
+  };
+
   const handlePrint = (type: 'riddle' | 'answer') => {
     if (printingState !== 'idle') return;
     
@@ -296,15 +387,20 @@ export default function App() {
 
   useEffect(() => {
     if (printingState === 'printing') {
+      const stopSound = startPrintingSound();
       const duration = currentLines.length * 1000;
       const timer = setTimeout(() => {
         setPrintingState('done');
       }, duration);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        stopSound();
+      };
     }
 
     if (printingState === 'done') {
       const timer = setTimeout(() => {
+        playCutSound();
         setPrintingState('cutting');
       }, 1000);
       return () => clearTimeout(timer);
@@ -417,13 +513,9 @@ export default function App() {
                       }
                     : printingState === 'done' || printingState === 'cutting'
                     ? {
-                        backgroundColor: ['#111', led.color, '#111', led.color, '#111', led.color, '#111'],
-                        scale: [1, 1.3, 1, 1.3, 1, 1.3, 1],
+                        backgroundColor: ['#111', led.color, '#111'],
+                        scale: [1, 1.3, 1],
                         boxShadow: [
-                          'inset 0 1px 2px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.3)',
-                          `0 0 15px ${led.color}, inset 0 1px 2px rgba(0,0,0,0.8)`,
-                          'inset 0 1px 2px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.3)',
-                          `0 0 15px ${led.color}, inset 0 1px 2px rgba(0,0,0,0.8)`,
                           'inset 0 1px 2px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.3)',
                           `0 0 15px ${led.color}, inset 0 1px 2px rgba(0,0,0,0.8)`,
                           'inset 0 1px 2px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.3)'
