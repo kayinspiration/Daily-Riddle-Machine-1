@@ -307,7 +307,7 @@ export default function App() {
       setTimeout(() => setEatCount(c => c - 1), 800);
       
       deletedCountRef.current += 1;
-      if (deletedCountRef.current >= 3) {
+      if (deletedCountRef.current > 0 && deletedCountRef.current % 3 === 0) {
         setTimeout(playGulpSound, 300);
       }
     }
@@ -773,7 +773,7 @@ export default function App() {
                     setTimeout(() => setEatCount(c => c - 1), 800);
                     
                     deletedCountRef.current += 1;
-                    if (deletedCountRef.current >= 3) {
+                    if (deletedCountRef.current > 0 && deletedCountRef.current % 3 === 0) {
                       setTimeout(playGulpSound, 300);
                     }
                   }}
