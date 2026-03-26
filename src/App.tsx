@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trash2, X, Recycle, Lightbulb, Send, PenTool, Star, Hash, HelpCircle } from 'lucide-react';
+import { Trash2, X, Recycle, Lightbulb, Send, PenTool, Star, Hash, HelpCircle, School, Tent, Moon, Cloud, Flame, Compass } from 'lucide-react';
 
 const ChalkboardBackground = () => (
   <div className="fixed inset-0 z-0 overflow-hidden bg-[#1e3329] pointer-events-none">
@@ -24,6 +24,121 @@ const ChalkboardBackground = () => (
 
     {/* Vignette */}
     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)]"></div>
+  </div>
+);
+
+const PineTreeSilhouette = ({ className, style, fill = "currentColor" }: { className?: string, style?: React.CSSProperties, fill?: string }) => (
+  <svg viewBox="0 0 100 120" className={className} style={style} preserveAspectRatio="none" fill={fill}>
+    <path d="M50 0 L80 40 L65 40 L90 80 L70 80 L100 120 L0 120 L30 80 L10 80 L35 40 L20 40 Z" />
+  </svg>
+);
+
+const CampingBackground = () => (
+  <div className="fixed inset-0 z-0 overflow-hidden bg-gradient-to-b from-slate-950 via-indigo-950 to-violet-950 pointer-events-none">
+    {/* Glowing Moon */}
+    <div className="absolute top-[12%] right-[15%] w-24 h-24 bg-yellow-100 rounded-full shadow-[0_0_80px_20px_rgba(254,240,138,0.4)]">
+      <div className="absolute top-4 right-6 w-6 h-6 bg-yellow-200/40 rounded-full blur-[1px]"></div>
+      <div className="absolute bottom-6 left-4 w-8 h-8 bg-yellow-200/30 rounded-full blur-[2px]"></div>
+    </div>
+
+    {/* Distant Mountains */}
+    <svg className="absolute bottom-0 w-full h-[50vh] opacity-60" preserveAspectRatio="none" viewBox="0 0 100 100">
+      <path d="M0,100 L0,50 L15,35 L35,60 L60,20 L85,55 L100,40 L100,100 Z" fill="#1e1b4b" />
+    </svg>
+    <svg className="absolute bottom-0 w-full h-[35vh] opacity-80" preserveAspectRatio="none" viewBox="0 0 100 100">
+      <path d="M0,100 L0,60 L25,25 L45,55 L75,15 L100,45 L100,100 Z" fill="#0f172a" />
+    </svg>
+
+    {/* Left framing trees */}
+    <div className="absolute bottom-0 left-0 w-[30vw] h-full flex items-end">
+      <PineTreeSilhouette className="absolute bottom-0 -left-10 w-48 h-[60vh]" fill="#020617" />
+      <PineTreeSilhouette className="absolute bottom-0 left-10 w-32 h-[45vh]" fill="#0f172a" />
+      <PineTreeSilhouette className="absolute bottom-0 left-24 w-40 h-[55vh]" fill="#020617" />
+    </div>
+
+    {/* Right framing trees */}
+    <div className="absolute bottom-0 right-0 w-[30vw] h-full flex items-end">
+      <PineTreeSilhouette className="absolute bottom-0 -right-12 w-56 h-[65vh]" fill="#020617" />
+      <PineTreeSilhouette className="absolute bottom-0 right-16 w-36 h-[50vh]" fill="#0f172a" />
+      <PineTreeSilhouette className="absolute bottom-0 right-32 w-44 h-[55vh]" fill="#020617" />
+    </div>
+
+    {/* Campfire Glow (Center bottom) */}
+    <div className="absolute -bottom-[10%] left-1/2 -translate-x-1/2 w-[80vw] h-[50vh] bg-[radial-gradient(ellipse_at_center,rgba(234,88,12,0.3)_0%,transparent_70%)] blur-[20px]"></div>
+
+    {/* Fireflies */}
+    {Array.from({ length: 30 }).map((_, i) => (
+      <motion.div
+        key={i}
+        className="absolute w-1.5 h-1.5 bg-yellow-300 rounded-full shadow-[0_0_12px_3px_rgba(253,224,71,0.9)]"
+        initial={{
+          left: `${Math.random() * 100}%`,
+          top: `${60 + Math.random() * 40}%`,
+          opacity: 0,
+          scale: Math.random() * 0.5 + 0.5
+        }}
+        animate={{
+          top: `${30 + Math.random() * 60}%`,
+          left: `${Math.random() * 100}%`,
+          opacity: [0, 1, 1, 0],
+          scale: [0.5, 1.2, 1.2, 0.5]
+        }}
+        transition={{
+          duration: 4 + Math.random() * 6,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: Math.random() * 5
+        }}
+      />
+    ))}
+
+    {/* Bottom Vignette/Fog */}
+    <div className="absolute bottom-0 left-0 right-0 h-[25vh] bg-gradient-to-t from-[#020617] to-transparent"></div>
+  </div>
+);
+
+const BedtimeBackground = () => (
+  <div className="fixed inset-0 z-0 overflow-hidden bg-indigo-950 pointer-events-none">
+    {/* Deep night gradient */}
+    <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#1e1b4b,#000000)]"></div>
+    {/* Soft nightlight glow */}
+    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-indigo-500/10 blur-[120px] rounded-full"></div>
+    
+    {/* Doodles/Icons */}
+    <div className="absolute top-[15%] left-[12%] text-indigo-200/10 -rotate-12"><Cloud size={100} strokeWidth={1.5} /></div>
+    <div className="absolute top-[25%] right-[10%] text-indigo-200/10 rotate-12"><Moon size={80} strokeWidth={1.5} /></div>
+    <div className="absolute bottom-[25%] left-[8%] text-indigo-200/10 -rotate-12"><Star size={70} strokeWidth={1.5} /></div>
+    <div className="absolute bottom-[15%] right-[15%] text-indigo-200/10 rotate-12"><Cloud size={110} strokeWidth={1.5} /></div>
+    
+    {/* Floating Zzzs */}
+    {Array.from({ length: 12 }).map((_, i) => (
+      <motion.div
+        key={i}
+        className="absolute text-indigo-300/20 font-bold text-2xl"
+        initial={{
+          left: `${Math.random() * 100}%`,
+          bottom: '-10%',
+          opacity: 0,
+          scale: 0.5,
+          rotate: Math.random() * 40 - 20
+        }}
+        animate={{
+          bottom: '110%',
+          left: `${Math.random() * 100}%`,
+          opacity: [0, 0.6, 0],
+          scale: [0.5, 1.5, 1],
+          rotate: Math.random() * 40 - 20
+        }}
+        transition={{
+          duration: 15 + Math.random() * 15,
+          repeat: Infinity,
+          delay: Math.random() * 15,
+          ease: "linear"
+        }}
+      >
+        Z
+      </motion.div>
+    ))}
   </div>
 );
 
@@ -261,6 +376,7 @@ const RIDDLES = [
 ];
 
 export default function App() {
+  const [theme, setTheme] = useState<'classroom' | 'camping' | 'bedtime'>('classroom');
   const [printingState, setPrintingState] = useState<'idle' | 'printing' | 'done' | 'cutting'>('idle');
   const [currentLines, setCurrentLines] = useState<string[]>([]);
   const [currentType, setCurrentType] = useState<'riddle' | 'answer'>('riddle');
@@ -552,10 +668,22 @@ export default function App() {
     }
   }, [printingState, currentLines]);
 
+  const getThemeBgColor = () => {
+    switch(theme) {
+      case 'camping': return 'bg-slate-900';
+      case 'bedtime': return 'bg-indigo-950';
+      default: return 'bg-[#1e3329]';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#1e3329] flex items-center justify-center p-4 font-sans selection:bg-black selection:text-white relative overflow-hidden">
-      <ChalkboardBackground />
-      <div className="relative z-10 w-full max-w-md flex flex-col items-center mt-20">
+    <div className={`min-h-screen ${getThemeBgColor()} flex items-center justify-center p-4 font-sans selection:bg-black selection:text-white relative overflow-hidden transition-colors duration-1000`}>
+      <AnimatePresence mode="wait">
+        {theme === 'classroom' && <motion.div key="classroom" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:1}}><ChalkboardBackground /></motion.div>}
+        {theme === 'camping' && <motion.div key="camping" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:1}}><CampingBackground /></motion.div>}
+        {theme === 'bedtime' && <motion.div key="bedtime" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:1}}><BedtimeBackground /></motion.div>}
+      </AnimatePresence>
+      <div className="relative z-10 w-full max-w-md flex flex-col items-center mt-[calc(15vh+100px)]">
         
         {/* Device Front */}
         <div className="relative z-10 w-full bg-[#FFCC00] rounded-2xl p-6 pb-28 shadow-[inset_4px_4px_0px_#FFE666,inset_-4px_-4px_0px_#CC9900,0_20px_40px_rgba(0,0,0,0.6)] flex flex-col gap-6">
@@ -718,6 +846,19 @@ export default function App() {
             {/* Logo Text */}
             <span className="text-[#FFCC00] font-bold text-lg tracking-tight" style={{ fontFamily: 'Arial, sans-serif' }}>Winter Garage Labs</span>
           </div>
+        </div>
+
+        {/* Theme Selector right below the machine */}
+        <div className="mt-8 z-50 flex gap-4 bg-black/40 p-2 rounded-full backdrop-blur-md border border-white/10 shadow-xl">
+          <button onClick={() => setTheme('classroom')} className={`p-3 rounded-full transition-all duration-300 ${theme === 'classroom' ? 'bg-white/20 text-white scale-110 shadow-lg' : 'text-white/50 hover:text-white/80 hover:scale-105'}`} title="Classroom Mode">
+            <School size={24} />
+          </button>
+          <button onClick={() => setTheme('camping')} className={`p-3 rounded-full transition-all duration-300 ${theme === 'camping' ? 'bg-white/20 text-orange-300 scale-110 shadow-lg' : 'text-white/50 hover:text-white/80 hover:scale-105'}`} title="Camping Mode">
+            <Tent size={24} />
+          </button>
+          <button onClick={() => setTheme('bedtime')} className={`p-3 rounded-full transition-all duration-300 ${theme === 'bedtime' ? 'bg-white/20 text-indigo-300 scale-110 shadow-lg' : 'text-white/50 hover:text-white/80 hover:scale-105'}`} title="Bedtime Mode">
+            <Moon size={24} />
+          </button>
         </div>
 
         {/* Fallen Papers (Absolute to machine) */}
