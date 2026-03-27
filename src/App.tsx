@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trash2, X, Recycle, Lightbulb, Send, PenTool, Star, Hash, HelpCircle, School, Tent, Moon, Cloud, Flame, Compass, RefreshCw } from 'lucide-react';
 
@@ -387,7 +387,8 @@ const getPaperTheme = (theme: string) => {
         accentBg: 'bg-[#d97706]/20',
         ctaBg: 'bg-[#d4c19c] hover:bg-[#c2ae89]',
         ctaText: 'text-[#4a3b2c]',
-        quote: 'border-[#cdae82] text-[#8b7355]'
+        quote: 'border-[#cdae82] text-[#8b7355]',
+        gradient: 'bg-gradient-to-b from-[#dcc9a7] via-[#e6d5b8] to-[#dcc9a7]'
       };
     case 'bedtime':
       return {
@@ -399,7 +400,8 @@ const getPaperTheme = (theme: string) => {
         accentBg: 'bg-yellow-200/20',
         ctaBg: 'bg-[#2e2a6b] hover:bg-[#3d3882]',
         ctaText: 'text-indigo-100',
-        quote: 'border-indigo-800 text-indigo-300'
+        quote: 'border-indigo-800 text-indigo-300',
+        gradient: 'bg-gradient-to-b from-[#18153d] via-[#1e1b4b] to-[#18153d]'
       };
     case 'classroom':
     default:
@@ -412,23 +414,24 @@ const getPaperTheme = (theme: string) => {
         accentBg: 'bg-blue-50',
         ctaBg: 'bg-slate-100 hover:bg-slate-200',
         ctaText: 'text-slate-600',
-        quote: 'border-slate-200 text-slate-300'
+        quote: 'border-slate-200 text-slate-300',
+        gradient: 'bg-gradient-to-b from-slate-50 via-white to-slate-50'
       };
   }
 };
 
-const PaperReceipt = ({ 
-  paper, 
-  onDragEnd, 
-  onDelete, 
-  trashOffset,
-  theme
-}: { 
+const PaperReceipt: React.FC<{ 
   paper: { id: number, riddleLines: string[], answerLines: string[], rotate: number },
   onDragEnd: (id: number, info: any) => void,
   onDelete: (id: number) => void,
   trashOffset: { x: number, y: number },
   theme: 'classroom' | 'camping' | 'bedtime'
+}> = ({ 
+  paper, 
+  onDragEnd, 
+  onDelete, 
+  trashOffset,
+  theme
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const styles = getPaperTheme(theme);
@@ -469,7 +472,7 @@ const PaperReceipt = ({
       >
         {/* Front Side (Riddle) */}
         <div 
-          className={`w-full ${styles.bg} shadow-[0_10px_25px_rgba(0,0,0,0.5)] pb-10 border-x border-b ${styles.border}`}
+          className={`w-full ${styles.gradient} shadow-[0_10px_25px_rgba(0,0,0,0.5)] pb-10 border-x border-b ${styles.border}`}
           style={{ backfaceVisibility: 'hidden' }}
         >
           {/* Jagged Top Edge */}
@@ -527,7 +530,7 @@ const PaperReceipt = ({
 
         {/* Back Side (Answer) */}
         <div 
-          className={`absolute top-0 left-0 w-full h-full ${styles.bg} shadow-[0_10px_25px_rgba(0,0,0,0.5)] pb-10 border-x border-b ${styles.border}`}
+          className={`absolute top-0 left-0 w-full h-full ${styles.gradient} shadow-[0_10px_25px_rgba(0,0,0,0.5)] pb-10 border-x border-b ${styles.border}`}
           style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
         >
           {/* Jagged Top Edge */}
@@ -906,33 +909,33 @@ export default function App() {
                 transition={{ duration: 0.15, ease: "linear" }}
               />
 
-              <motion.div
-                initial={{ y: "100%", opacity: 1 }}
-                animate={{ 
-                  y: printingState === 'idle' ? "100%" : "0%",
-                  opacity: 1,
-                  rotate: 0,
-                  scale: 1
-                }}
-                transition={{ 
-                  duration: printingState === 'printing' ? currentRiddle.length * 1 : 0, 
-                  ease: "linear" 
-                }}
-                className={`absolute bottom-0 left-0 w-full ${styles.bg} shadow-[0_-5px_15px_rgba(0,0,0,0.2)] pb-10 origin-bottom-right border-x border-b ${styles.border}`}
-              >
-                {/* Jagged Top Edge */}
-                <div className="absolute -top-[8px] left-0 w-full h-[8px] flex">
-                  {Array.from({ length: 30 }).map((_, i) => (
-                    <div key={i} className={`flex-1 h-full ${styles.bg}`} style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} />
-                  ))}
-                </div>
-                
-                {/* Jagged Bottom Edge */}
-                <div className="absolute -bottom-[8px] left-0 w-full h-[8px] flex">
-                  {Array.from({ length: 30 }).map((_, i) => (
-                    <div key={i} className={`flex-1 h-full ${styles.bg}`} style={{ clipPath: 'polygon(0% 0%, 100% 0%, 50% 100%)' }} />
-                  ))}
-                </div>
+                <motion.div
+                  initial={{ y: "100%", opacity: 1 }}
+                  animate={{ 
+                    y: printingState === 'idle' ? "100%" : "0%",
+                    opacity: 1,
+                    rotate: 0,
+                    scale: 1
+                  }}
+                  transition={{ 
+                    duration: printingState === 'printing' ? currentRiddle.length * 1 : 0, 
+                    ease: "linear" 
+                  }}
+                  className={`absolute bottom-0 left-0 w-full ${styles.gradient} shadow-[0_-5px_15px_rgba(0,0,0,0.2)] pb-10 origin-bottom-right border-x border-b ${styles.border}`}
+                >
+                  {/* Jagged Top Edge */}
+                  <div className="absolute -top-[8px] left-0 w-full h-[8px] flex">
+                    {Array.from({ length: 30 }).map((_, i) => (
+                      <div key={i} className={`flex-1 h-full ${styles.bg}`} style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }} />
+                    ))}
+                  </div>
+                  
+                  {/* Jagged Bottom Edge */}
+                  <div className="absolute -bottom-[8px] left-0 w-full h-[8px] flex">
+                    {Array.from({ length: 30 }).map((_, i) => (
+                      <div key={i} className={`flex-1 h-full ${styles.bg}`} style={{ clipPath: 'polygon(0% 0%, 100% 0%, 50% 100%)' }} />
+                    ))}
+                  </div>
                 
                 {/* Content */}
                 <div className={`p-6 pt-8 flex flex-col items-center text-center gap-3 ${styles.text}`}>
